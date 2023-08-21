@@ -1,24 +1,27 @@
+import 'package:json_annotation/json_annotation.dart';
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../models/song.dart';
 
 class SongPage extends StatefulWidget {
   final Song song;
-  final AudioPlayer player;
+  // final AudioPlayer player;
 
   const SongPage({
     Key? key,
     required this.song,
-    required this.player,
+    // required this.player,
   }) : super(key: key);
 
   @override
   State<SongPage> createState() => _SongPageState();
 }
 
+@JsonSerializable()
 class _SongPageState extends State<SongPage> {
   double sliderValue = 0.0;
   bool isLiked = false;
@@ -26,6 +29,8 @@ class _SongPageState extends State<SongPage> {
   bool isSliderChanging = false;
   bool isPlaying = false;
   Duration? lastPosition;
+
+  final AudioPlayer _player = GetIt.I<AudioPlayer>();
 
   Duration parseDuration(String? durationString) {
     if (durationString == null || durationString.isEmpty) {
@@ -55,30 +60,44 @@ class _SongPageState extends State<SongPage> {
     setState(() {
       totalDuration = parsedDuration;
     });
-    widget.player.setUrl(widget.song.downloadUrl[2].link).then((_) {
+    _player.setUrl(widget.song.downloadUrl[2].link).then((_) {
       setState(() {
-        totalDuration = widget.player.duration ?? Duration.zero;
+        totalDuration = _player.duration ?? Duration.zero;
       });
     });
-    widget.player.playerStateStream.listen((state) {
+    _player.playerStateStream.listen(_stateStateCallback);
+
+    _player.positionStream.listen(_streamListnerCallback);
+  }
+
+  void _streamListnerCallback(Duration event) {
+    if (mounted) {
+      setState(() {
+        sliderValue = event.inSeconds.toDouble();
+      });
+    }
+  }
+
+  void _stateStateCallback(PlayerState state) {
+    if (mounted) {
       if (state.processingState == ProcessingState.completed) {
         setState(() {
           sliderValue = 0.0;
           isPlaying = false;
         });
       }
-    });
-
-    widget.player.positionStream.listen((event) {
-      setState(() {
-        sliderValue = event.inSeconds.toDouble();
-      });
-    });
+    }
   }
 
   @override
   void dispose() {
-    widget.player.dispose();
+    _player.playerStateStream.drain().then((_) {
+      _player.playerStateStream.listen(_stateStateCallback).cancel();
+    });
+
+    _player.positionStream.drain().then((_) {
+      _player.positionStream.listen(_streamListnerCallback).cancel();
+    });
     super.dispose();
   }
 
@@ -209,16 +228,16 @@ class _SongPageState extends State<SongPage> {
                           });
                           try {
                             if (!isPlaying) {
-                              await widget.player.pause();
-                              lastPosition = widget.player.position;
+                              await _player.pause();
+                              lastPosition = _player.position;
                             } else {
                               if (lastPosition != null) {
-                                await widget.player.seek(lastPosition);
-                                await widget.player.play();
+                                await _player.seek(lastPosition);
+                                await _player.play();
                               } else {
-                                await widget.player
+                                await _player
                                     .setUrl(widget.song.downloadUrl[2].link);
-                                await widget.player.play();
+                                await _player.play();
                               }
                             }
                           } catch (e) {
@@ -258,9 +277,9 @@ class _SongPageState extends State<SongPage> {
                   },
                   onChangeEnd: (value) async {
                     final position = Duration(seconds: value.toInt());
-                    await widget.player.seek(position);
+                    await _player.seek(position);
                     if (isPlaying) {
-                      await widget.player.play();
+                      await _player.play();
                     }
                   },
                   value: sliderValue,

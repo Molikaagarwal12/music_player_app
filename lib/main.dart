@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:get_it/get_it.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:music_player/Screens/home_screen.dart';
 import 'package:music_player/Screens/search_screen.dart';
-import 'package:music_player/services/service_locator.dart';
+import 'package:music_player/provider/mini_player.dart';
+import 'package:music_player/provider/mini_player_controller.dart';
+import 'package:provider/provider.dart';
 
 Future<void> main() async {
-  await setupServiceLocator();
   await dotenv.load();
+  GetIt.I.registerSingleton<AudioPlayer>(AudioPlayer());
 
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => MiniPlayerProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -18,9 +27,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.deepPurple,
-      ),
       home: const MyHome(),
       routes: {
         '/search': (context) => const SearchScreen(),
@@ -32,7 +38,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHome extends StatefulWidget {
-  const MyHome({super.key});
+  const MyHome({Key? key}) : super(key: key);
 
   @override
   State<MyHome> createState() => _MyHomeState();
@@ -51,33 +57,92 @@ class _MyHomeState extends State<MyHome> {
       ),
     ];
 
+    const iconSize = 38.0;
+    const tabBarHeight = 33.0;
+    const miniPlayerBottom = tabBarHeight + iconSize / 2;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Flutter Demo Home Page'),
-      ),
-      body: tabs[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: tabs[_currentIndex],
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: 'Search',
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _currentIndex = 0;
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.home,
+                      color: Colors.white,
+                      size: iconSize,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _currentIndex = 1;
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.search,
+                      color: Colors.white,
+                      size: iconSize,
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      setState(() {
+                        _currentIndex = 2;
+                      });
+                    },
+                    icon: const Icon(
+                      Icons.person,
+                      color: Colors.white,
+                      size: iconSize,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'User Profile',
+          Positioned(
+            bottom: miniPlayerBottom,
+            left: 0,
+            right: 0,
+            child: Consumer<MiniPlayerProvider>(
+              builder: (context, miniPlayerProvider, _) {
+                if (miniPlayerProvider.isMiniPlayerVisible) {
+                  return GlobalMiniPlayer(
+                    song: miniPlayerProvider.currentSong!,
+                    onClose: () {
+                      miniPlayerProvider.toggleMiniPlayerVisibility();
+                    },
+                  );
+                } else {
+                  return const SizedBox.shrink();
+                }
+              },
+            ),
           ),
         ],
       ),
     );
   }
 }
+
+
+
+
+
+
+

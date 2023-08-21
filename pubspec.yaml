@@ -48,6 +48,9 @@ dependencies:
   audio_service: ^0.18.10
   audio_video_progress_bar: ^1.0.1
   get_it: ^7.6.0
+  persistent_bottom_nav_bar: ^5.0.2
+  cached_network_image: ^3.2.3
+  
 
 dev_dependencies:
   flutter_test:

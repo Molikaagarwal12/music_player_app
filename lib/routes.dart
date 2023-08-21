@@ -9,18 +9,18 @@ class Routes {
   static const String login = '/login';
   static const String signup = '/signup';
   static const String home = '/home';
-static const String search = '/search';
+  static const String search = '/search';
 
   static Route<dynamic>? generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case login:
-        return MaterialPageRoute(builder: (_) =>  const LoginScreen());
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
       case signup:
-        return MaterialPageRoute(builder: (_) =>  const SignupScreen());
+        return MaterialPageRoute(builder: (_) => const SignupScreen());
       case home:
-        return MaterialPageRoute(builder: (_) =>  const MyHomePage());
+        return MaterialPageRoute(builder: (_) => const MyHomePage());
       case search:
-        return MaterialPageRoute(builder: (_) =>  const SearchScreen());
+        return MaterialPageRoute(builder: (_) => const SearchScreen());
     }
     return null;
   }

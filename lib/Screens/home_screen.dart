@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:just_audio/just_audio.dart';
+
+import 'package:music_player/provider/mini_player_controller.dart';
+import 'package:music_player/utils/extensions.dart';
 import 'package:music_player/widgets/alubm_song_list.dart';
+import 'package:provider/provider.dart';
 import '../api/jio_saavn.dart';
+import '../models/song.dart';
 import '../widgets/playlist_song_details.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -10,12 +17,34 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-// ari maioya kaan fod die tumare laptop ki vplume h vo toh
-
 class _MyHomePageState extends State<MyHomePage> {
+  void _showMiniPlayer(Song song) {
+    print("object");
+    Provider.of<MiniPlayerProvider>(context, listen: false).play(song);
+  }
+
+  String getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good morning';
+    } else if (hour < 17) {
+      return 'Good afternoon';
+    } else {
+      return 'Good evening';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // appBar: AppBar(
+      //   title: Text(
+      //     getGreeting(),
+      //     style: const TextStyle(
+      //         color: Colors.white, backgroundColor: Colors.black),
+      //   ),
+      // ),
+      backgroundColor: Colors.black,
       body: FutureBuilder(
         future:
             api.getHomeData(langs: ["hindi", "spanish", "english", "punjabi"]),
@@ -35,39 +64,95 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  const SizedBox(
+                    height: 18,
+                  ),
+                  Text(
+                    getGreeting(),
+                    style: const TextStyle(
+                        color: Colors.white,
+                        backgroundColor: Colors.black,
+                        fontSize: 27),
+                  ),
+                  const SizedBox(
+                    height: 18,
+                  ),
                   const Text(
                     "Trending",
                     style: TextStyle(
-                      fontSize: 20,
+                      fontSize: 30,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
+                  const SizedBox(height: 18),
                   SizedBox(
                     height: 200,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: trending.length,
                       itemBuilder: (context, index) {
-                        return SizedBox(
-                          width: 150,
-                          child: Card(
-                            elevation: 4,
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: Image.network(
-                                    trending[index].image[0].link,
-                                    fit: BoxFit.cover,
+                        final trending_ = trending[index];
+                        return GestureDetector(
+                          onTap: () async {
+                            if (trending_.type == "album") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlbumSongsPage(
+                                    id: trending_.id,
+                                    name: trending_.name,
                                   ),
                                 ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(
-                                    trending[index].name,
-                                    overflow: TextOverflow.ellipsis,
+                              );
+                            } else {
+                              final miniPlayerProvider =
+                                  Provider.of<MiniPlayerProvider>(context,
+                                      listen: false);
+
+                              miniPlayerProvider.setLoadingState(true);
+
+                              final song =
+                                  await api.getSongDetails(trending_.id);
+
+                              if (context.mounted) {
+                                miniPlayerProvider.setLoadingState(false);
+                                Provider.of<MiniPlayerProvider>(context,
+                                        listen: false)
+                                    .showMiniPlayer(); // Show the mini player
+                                GetIt.I<AudioPlayer>().stop();
+                                _showMiniPlayer(song[0]);
+                              }
+                            }
+                          },
+                          child: SizedBox(
+                            width: 150,
+                            child: Card(
+                              color: Colors.black,
+                              elevation: 4,
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: Image.network(
+                                      trending[index].image[1].link,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(
+                                      trending[index].name.unescapeHtml(),
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         );
@@ -77,8 +162,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 20),
                   const Text(
                     "Top Albums",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
+                  const SizedBox(height: 18),
                   SizedBox(
                     height: 200,
                     child: ListView.builder(
@@ -87,26 +177,46 @@ class _MyHomePageState extends State<MyHomePage> {
                       itemBuilder: (context, index) {
                         final album = albums[index];
                         return GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AlbumSongsPage(
-                                  id: album.id,
-                                  name: album.name,
+                          onTap: () async {
+                            if (album.type == "album") {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AlbumSongsPage(
+                                    id: album.id,
+                                    name: album.name,
+                                  ),
                                 ),
-                              ),
-                            );
+                              );
+                            } else {
+                              final miniPlayerProvider =
+                                  Provider.of<MiniPlayerProvider>(context,
+                                      listen: false);
+
+                              miniPlayerProvider.setLoadingState(true);
+
+                              final song = await api.getSongDetails(album.id);
+
+                              if (context.mounted) {
+                                miniPlayerProvider.setLoadingState(false);
+                                Provider.of<MiniPlayerProvider>(context,
+                                        listen: false)
+                                    .showMiniPlayer(); // Show the mini player
+                                GetIt.I<AudioPlayer>().stop();
+                                _showMiniPlayer(song[0]);
+                              }
+                            }
                           },
                           child: SizedBox(
                             width: 150,
                             child: Card(
+                              color: Colors.black,
                               elevation: 4,
                               child: Column(
                                 children: [
                                   Expanded(
                                     child: Image.network(
-                                      album.image[0].link,
+                                      album.image[2].link,
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -115,6 +225,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                     child: Text(
                                       album.name,
                                       overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -128,8 +241,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 20),
                   const Text(
                     "Top Playlists",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
+                  const SizedBox(height: 18),
                   SizedBox(
                     height: 200,
                     child: ListView.builder(
@@ -151,6 +269,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: SizedBox(
                             width: 150,
                             child: Card(
+                              color: Colors.black,
                               elevation: 4,
                               child: Column(
                                 children: [
@@ -165,6 +284,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                     child: Text(
                                       playlist.title,
                                       overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -178,8 +300,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   const SizedBox(height: 20),
                   const Text(
                     "Top Charts",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
+                  const SizedBox(height: 18),
                   SizedBox(
                     height: 200,
                     child: ListView.builder(
@@ -201,20 +328,22 @@ class _MyHomePageState extends State<MyHomePage> {
                           child: SizedBox(
                             width: 150,
                             child: Card(
+                              color: Colors.black,
                               elevation: 4,
                               child: Column(
                                 children: [
-                                  Expanded(
-                                    child: Image.network(
-                                      chart.image[0].link,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  Image.network(
+                                    chart.image[0].link,
+                                    fit: BoxFit.cover,
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Text(
                                       chart.title,
                                       overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -234,20 +363,3 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-
-
-
-
-
-
-
-//                 ],
-//               ),
-//             );
-//           }
-//         },
-//       ),
-//     );
-//   }
-// }
