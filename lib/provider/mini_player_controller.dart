@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
@@ -54,37 +52,21 @@ class MiniPlayerProvider extends ChangeNotifier {
   }
 
   void play(Song song) async {
-    inspect(song);
-    inspect(_currentSong);
-    if (_currentSong != song) {
-      _currentSong = song;
-      await _player.setUrl(song.downloadUrl[2].link);
-
-      await _player.play();
-      _isPlaying = true;
-
-      print(isPlaying);
-      print("----------------------------------------------------------------");
-
-      return;
-    }
-
-    print(isPlaying);
-    print(
-        "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
-
+  if (_currentSong != song) {
+    _currentSong = song;
+    await _player.setUrl(song.downloadUrl[2].link);
+    _player.play(); // Start playback immediately
+  } else {
     if (!_isPlaying) {
-      await _player.play();
-      _isPlaying = true;
-      print("playing true");
+      await _player.play(); // Start playback if not playing
     } else {
       await _player.pause();
-      _isPlaying = false;
-      print("playing flase");
     }
-
-    notifyListeners();
   }
+
+  _isPlaying = _player.playing; // Update _isPlaying based on player state
+  notifyListeners();
+}
 
   void skipForward() {
     // Implement skip forward logic

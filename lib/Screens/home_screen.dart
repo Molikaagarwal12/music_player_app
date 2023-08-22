@@ -37,13 +37,6 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text(
-      //     getGreeting(),
-      //     style: const TextStyle(
-      //         color: Colors.white, backgroundColor: Colors.black),
-      //   ),
-      // ),
       backgroundColor: Colors.black,
       body: FutureBuilder(
         future:
@@ -103,8 +96,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => AlbumSongsPage(
-                                    id: trending_.id,
-                                    name: trending_.name,
+                                    albumId: trending_.id,
+                                    albumTitle: trending_.name,
                                   ),
                                 ),
                               );
@@ -119,6 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   await api.getSongDetails(trending_.id);
 
                               if (context.mounted) {
+                                print("dubara playing");
                                 miniPlayerProvider.setLoadingState(false);
                                 Provider.of<MiniPlayerProvider>(context,
                                         listen: false)
@@ -183,8 +177,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => AlbumSongsPage(
-                                    id: album.id,
-                                    name: album.name,
+                                    albumId: album.id,
+                                    albumTitle: album.name,
                                   ),
                                 ),
                               );
@@ -198,6 +192,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               final song = await api.getSongDetails(album.id);
 
                               if (context.mounted) {
+                                print("dubara playing");
                                 miniPlayerProvider.setLoadingState(false);
                                 Provider.of<MiniPlayerProvider>(context,
                                         listen: false)

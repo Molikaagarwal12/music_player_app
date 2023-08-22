@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:music_player/utils/extensions.dart';
 import 'package:provider/provider.dart';
 import '../models/song.dart';
+import '../provider/mini_player_controller.dart';
 import '../widgets/song_page.dart';
-import 'mini_player_controller.dart';
-// Import the updated MiniPlayerProvider
+
 
 class GlobalMiniPlayer extends StatefulWidget {
   final Song song;
@@ -75,17 +75,24 @@ class GlobalMiniPlayerState extends State<GlobalMiniPlayer> {
             Row(
               children: [
                 FloatingActionButton(
-                  onPressed: () async {
-                    miniPlayerProvider.play(widget.song);
-                  },
+                  
+                  
+                  
                   backgroundColor: Colors.grey,
+                
                   child: Icon(
+                    
                     miniPlayerProvider.isPlaying
                         ? Icons.pause
                         : Icons.play_arrow,
                     color: Colors.black,
                     size: 36,
                   ),
+                  onPressed: () {
+              
+                   miniPlayerProvider.play(widget.song);
+                   
+                  },
                 ),
                 IconButton(
                   onPressed: () {
