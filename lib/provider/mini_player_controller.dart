@@ -51,7 +51,7 @@ class MiniPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void play(Song song) async {
+   void play(Song song) async {
   if (_currentSong != song) {
     _currentSong = song;
     await _player.setUrl(song.downloadUrl[2].link);

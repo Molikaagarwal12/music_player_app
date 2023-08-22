@@ -75,24 +75,17 @@ class GlobalMiniPlayerState extends State<GlobalMiniPlayer> {
             Row(
               children: [
                 FloatingActionButton(
-                  
-                  
-                  
+                  onPressed: () async {
+                    miniPlayerProvider.play(widget.song);
+                  },
                   backgroundColor: Colors.grey,
-                
                   child: Icon(
-                    
                     miniPlayerProvider.isPlaying
                         ? Icons.pause
                         : Icons.play_arrow,
                     color: Colors.black,
                     size: 36,
                   ),
-                  onPressed: () {
-              
-                   miniPlayerProvider.play(widget.song);
-                   
-                  },
                 ),
                 IconButton(
                   onPressed: () {
