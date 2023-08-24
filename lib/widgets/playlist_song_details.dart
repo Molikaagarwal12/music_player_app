@@ -47,167 +47,173 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
 
           final playlist = snapshot.data as Playlist;
 
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(top: 80),
-                child: Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    image: DecorationImage(
-                      fit: BoxFit.cover,
-                      image: NetworkImage(
-                        playlist.image[2].link,
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Container(
+                    constraints: const BoxConstraints(maxWidth: 250),
+                    height: 250,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(
+                        fit: BoxFit.cover,
+                        image: NetworkImage(
+                          playlist.image[2].link,
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
+                const SizedBox(height: 20),
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            // Add your logic here for the first icon's onTap function
+                          },
+                          icon: const Icon(
+                            Icons.favorite_border,
+                            size: 30,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      child: IconButton(
-                        onPressed: () {
-                          // Add your logic here for the first icon's onTap function
-                        },
-                        icon: const Icon(
-                          Icons.favorite_border,
-                          size: 30,
-                          color: Colors.white,
+                      const SizedBox(width: 10),
+                      Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            // Add your logic here for the second icon's onTap function
+                          },
+                          icon: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.green,
+                            size: 36,
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
-                        ),
-                      ),
-                      child: IconButton(
-                        onPressed: () {
-                          // Add your logic here for the second icon's onTap function
-                        },
-                        icon: const Icon(
-                          Icons.play_arrow,
-                          color: Colors.green,
-                          size: 36,
-                        ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 14),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    playlist.name,
-                    style: const TextStyle(
-                      fontSize: 25,
-                      color: Colors.white,
+                const SizedBox(
+                  height: 10,
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 14),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      playlist.name,
+                      style: const TextStyle(
+                        fontSize: 25,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.only(left: 8),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    "${playlist.songs[0].year}.${playlist.songs[0].album.name}",
-                    style: const TextStyle(
-                      fontSize: 18,
-                      color: Colors.white,
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.only(left: 16),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "${playlist.songs[0].year}.${playlist.songs[0].album.name}",
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 15),
-              Padding(
-                padding: const EdgeInsets.only(left: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white,
-                          width: 2,
+                const SizedBox(height: 15),
+                Padding(
+                  padding: const EdgeInsets.only(left: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white,
+                            width: 2,
+                          ),
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            // Add your logic here for the first icon's onTap function
+                          },
+                          icon: const Icon(
+                            Icons.download_sharp,
+                            size: 20,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
-                      child: IconButton(
-                        onPressed: () {
-                          // Add your logic here for the first icon's onTap function
-                        },
-                        icon: const Icon(
-                          Icons.download_sharp,
-                          size: 20,
-                          color: Colors.white,
+                      const SizedBox(width: 10),
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                          children: [
+                            TextSpan(
+                              text: "${playlist.songs.length} Songs",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const TextSpan(text: ' • '),
+                            TextSpan(
+                              text: "${playlist.followerCount} Fans",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const TextSpan(text: ' • '),
+                            TextSpan(
+                              text: playlist.songs[0].duration.toString(),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                        children: [
-                          TextSpan(
-                            text: "${playlist.songs.length}",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const TextSpan(text: ' • '),
-                          TextSpan(
-                            text: "${playlist.followerCount} Fans",
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const TextSpan(text: ' • '),
-                          TextSpan(
-                            text: playlist.songs[0].duration.toString(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
-                child: ListView.builder(
+                ListView.builder(
+                  physics: const NeverScrollableScrollPhysics(),
+                  shrinkWrap: true,
                   itemCount: playlist.songs.length,
                   itemBuilder: (context, index) {
                     final song = playlist.songs[index];
@@ -264,8 +270,8 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                     );
                   },
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),

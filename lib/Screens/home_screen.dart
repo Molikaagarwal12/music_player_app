@@ -122,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             }
                           },
                           child: SizedBox(
-                            width: 150,
+                            width: 180,
                             child: Card(
                               color: Colors.black,
                               elevation: 4,
@@ -201,7 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             }
                           },
                           child: SizedBox(
-                            width: 150,
+                            width: 180,
                             child: Card(
                               color: Colors.black,
                               elevation: 4,
@@ -260,7 +260,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             );
                           },
                           child: SizedBox(
-                            width: 150,
+                            width: 180,
                             child: Card(
                               color: Colors.black,
                               elevation: 4,
@@ -301,7 +301,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   const SizedBox(height: 18),
                   SizedBox(
-                    height: 200,
+                    height: 220,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
                       itemCount: charts.length,
@@ -319,10 +319,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             );
                           },
                           child: SizedBox(
-                            width: 150,
+                            width: 180,
                             child: Card(
                               color: Colors.black,
-                              elevation: 4,
+                              // elevation: 5,
                               child: Column(
                                 children: [
                                   Image.network(

@@ -51,29 +51,29 @@ class MiniPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-   void play(Song song) async {
-  if (_currentSong != song) {
-    _currentSong = song;
-    await _player.setUrl(song.downloadUrl[2].link);
-    _player.play(); // Start playback immediately
-  } else {
-    if (!_isPlaying) {
-      await _player.play(); // Start playback if not playing
+  void play(Song song) async {
+    if (_currentSong !=song) {
+      _currentSong = song;
+      _isPlaying = true;
+      //  prlint(_isPlaying);
+      await _player.setUrl(song.downloadUrl[2].link);
+       _player.play(); // Start playback immediately
+
+      // Set _isPlaying to true since playback started
     } else {
-      await _player.pause();
+      print(_isPlaying);
+      if (!_isPlaying) {
+         _player.play();
+        _isPlaying = true;
+        print(_isPlaying); // Start playback if not playing
+      } else {
+         _player.pause();
+        _isPlaying = false;
+        print(_isPlaying);
+      }
     }
-  }
 
-  _isPlaying = _player.playing; // Update _isPlaying based on player state
-  notifyListeners();
-}
-
-  void skipForward() {
-    // Implement skip forward logic
-  }
-
-  void skipBack() {
-    // Implement skip back logic
+    notifyListeners();
   }
 
   @override
