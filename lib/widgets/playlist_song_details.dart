@@ -20,7 +20,7 @@ class PlaylistDetailPage extends StatefulWidget {
 
   @override
   State<PlaylistDetailPage> createState() => _PlaylistDetailPageState();
-  final MiniPlayerProvider miniPlayerController = MiniPlayerProvider();
+  
 }
 
 class _PlaylistDetailPageState extends State<PlaylistDetailPage> {

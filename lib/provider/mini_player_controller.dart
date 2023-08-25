@@ -11,6 +11,7 @@ class MiniPlayerProvider extends ChangeNotifier {
   bool _isPlaying = false;
   bool _isMiniPlayerVisible = false;
   bool _isLoading = false;
+  double _savedSliderValue = 0.0; // New variable to store slider value
 
   MiniPlayerProvider() {
     _player.playerStateStream.listen(_playerStateChanged);
@@ -20,14 +21,28 @@ class MiniPlayerProvider extends ChangeNotifier {
   bool get isMiniPlayerVisible => _isMiniPlayerVisible;
   Song? get currentSong => _currentSong;
   bool get isLoading => _isLoading;
+  double get savedSliderValue => _savedSliderValue; // Getter for slider value
 
   void setLoadingState(bool isLoading) {
     _isLoading = isLoading;
     notifyListeners();
   }
 
-  void _playerStateChanged(PlayerState state) {
-    if (state.processingState == ProcessingState.completed) {
+  void saveSliderValue(double value) {
+    _savedSliderValue = value;
+    notifyListeners();
+  }
+
+ void _playerStateChanged(PlayerState state) {
+    if (state.processingState == ProcessingState.completed ||
+        state.processingState == ProcessingState.idle) {
+      _isPlaying = false;
+      saveSliderValue(0.0); // Reset slider value when playback completes or stops
+      notifyListeners();
+    } else if (state.playing) {
+      _isPlaying = true;
+      notifyListeners();
+    } else if (!state.playing) {
       _isPlaying = false;
       notifyListeners();
     }
@@ -40,6 +55,10 @@ class MiniPlayerProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
+ void togglePlayState() {
+  _isPlaying = !_isPlaying;
+  notifyListeners();
+}
 
   void showMiniPlayer() {
     _isMiniPlayerVisible = true;
@@ -51,28 +70,26 @@ class MiniPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void play(Song song) async {
-    if (_currentSong !=song) {
+  void play(Song song, {Duration? initialPosition}) async {
+    if (_currentSong != song) {
       _currentSong = song;
-      _isPlaying = true;
-      //  prlint(_isPlaying);
-      await _player.setUrl(song.downloadUrl[2].link);
-       _player.play(); // Start playback immediately
 
-      // Set _isPlaying to true since playback started
+      await _player.setUrl(song.downloadUrl[2].link);
+      if (initialPosition != null) {
+        await _player.seek(initialPosition); // Seek to initial position
+      }
+      _player.play();
+      _isPlaying = true;
     } else {
-      print(_isPlaying);
       if (!_isPlaying) {
-         _player.play();
+        _player.play();
         _isPlaying = true;
-        print(_isPlaying); // Start playback if not playing
       } else {
-         _player.pause();
+        _player.pause();
         _isPlaying = false;
-        print(_isPlaying);
       }
     }
-
+    saveSliderValue(_player.position.inSeconds.toDouble()); // Save slider value
     notifyListeners();
   }
 

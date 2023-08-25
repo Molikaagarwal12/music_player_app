@@ -1,20 +1,23 @@
+import 'dart:async';
+
+import 'package:get_it/get_it.dart';
 import 'package:json_annotation/json_annotation.dart';
 // ignore_for_file: public_member_api_docs, sort_constructors_first
 
 import 'package:flutter/material.dart';
-import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music_player/provider/mini_player_controller.dart';
+import 'package:music_player/utils/extensions.dart';
+import 'package:provider/provider.dart';
 
 import '../models/song.dart';
 
 class SongPage extends StatefulWidget {
   final Song song;
-  // final AudioPlayer player;
 
   const SongPage({
     Key? key,
     required this.song,
-    // required this.player,
   }) : super(key: key);
 
   @override
@@ -23,86 +26,37 @@ class SongPage extends StatefulWidget {
 
 @JsonSerializable()
 class _SongPageState extends State<SongPage> {
-  double sliderValue = 0.0;
   bool isLiked = false;
-  Duration? totalDuration;
-  bool isSliderChanging = false;
-  bool isPlaying = false;
-  Duration? lastPosition;
-
   final AudioPlayer _player = GetIt.I<AudioPlayer>();
-
-  Duration parseDuration(String? durationString) {
-    if (durationString == null || durationString.isEmpty) {
-      return Duration.zero;
-    }
-    final parts = durationString.split(":");
-    if (parts.length == 2) {
-      final minutes = int.tryParse(parts[0]) ?? 0;
-      final seconds = int.tryParse(parts[1]) ?? 0;
-      return Duration(minutes: minutes, seconds: seconds);
-    } else if (parts.length == 3) {
-      final hours = int.tryParse(parts[0]) ?? 0;
-      final minutes = int.tryParse(parts[1]) ?? 0;
-      final seconds = int.tryParse(parts[2]) ?? 0;
-      return Duration(hours: hours, minutes: minutes, seconds: seconds);
-    } else {
-      return Duration.zero;
-    }
-  }
+  double _sliderValue = 0.0;
+  StreamSubscription<Duration>? _positionSubscription;
+  bool _isPlayingg = false;
 
   @override
   void initState() {
     super.initState();
 
-    final durationString = widget.song.duration;
-    final parsedDuration = parseDuration(durationString);
-    setState(() {
-      totalDuration = parsedDuration;
-    });
-    _player.setUrl(widget.song.downloadUrl[2].link).then((_) {
-      setState(() {
-        totalDuration = _player.duration ?? Duration.zero;
-      });
-    });
-    _player.playerStateStream.listen(_stateStateCallback);
-
-    _player.positionStream.listen(_streamListnerCallback);
-  }
-
-  void _streamListnerCallback(Duration event) {
-    if (mounted) {
-      setState(() {
-        sliderValue = event.inSeconds.toDouble();
-      });
-    }
-  }
-
-  void _stateStateCallback(PlayerState state) {
-    if (mounted) {
-      if (state.processingState == ProcessingState.completed) {
+    _positionSubscription = _player.positionStream.listen((Duration position) {
+      if (mounted) {
         setState(() {
-          sliderValue = 0.0;
-          isPlaying = false;
+          _sliderValue = position.inMilliseconds.toDouble();
         });
       }
-    }
+    });
+    _isPlayingg =
+        Provider.of<MiniPlayerProvider>(context, listen: false).isPlaying;
   }
 
   @override
   void dispose() {
-    _player.playerStateStream.drain().then((_) {
-      _player.playerStateStream.listen(_stateStateCallback).cancel();
-    });
-
-    _player.positionStream.drain().then((_) {
-      _player.positionStream.listen(_streamListnerCallback).cancel();
-    });
+    _positionSubscription?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    double maxSliderValue = _player.duration?.inMilliseconds.toDouble() ?? 0.0;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -159,33 +113,31 @@ class _SongPageState extends State<SongPage> {
               ],
             ),
           ),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SizedBox(height: 120), // Spacer for the image
-
+                const SizedBox(height: 260),
                 Text(
-                  widget.song.name,
+                  widget.song.name.unescapeHtml(),
                   style: const TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
-                    letterSpacing: 1.2,
+                    letterSpacing: 1.0,
                   ),
                 ),
                 const SizedBox(height: 8),
-
                 Text(
-                  'Album: ${widget.song.album.name}',
+                  'Album: ${widget.song.album.name.unescapeHtml()}',
                   style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
                   ),
                 ),
                 Text(
-                  'Artist: ${widget.song.primaryArtists}',
+                  'Artist: ${widget.song.primaryArtists.unescapeHtml()}',
                   style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
@@ -205,9 +157,7 @@ class _SongPageState extends State<SongPage> {
                     color: Colors.white,
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
                 Center(
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -223,30 +173,19 @@ class _SongPageState extends State<SongPage> {
                       const SizedBox(width: 32),
                       FloatingActionButton(
                         onPressed: () async {
-                          setState(() {
-                            isPlaying = !isPlaying;
-                          });
-                          try {
-                            if (!isPlaying) {
-                              await _player.pause();
-                              lastPosition = _player.position;
-                            } else {
-                              if (lastPosition != null) {
-                                await _player.seek(lastPosition);
-                                await _player.play();
-                              } else {
-                                await _player
-                                    .setUrl(widget.song.downloadUrl[2].link);
-                                await _player.play();
-                              }
-                            }
-                          } catch (e) {
-                            print("Error: $e");
+                          if (_isPlayingg) {
+                            _player.pause();
+                          } else {
+                            _player.play();
                           }
+                          setState(() {
+                            _isPlayingg =
+                                !_isPlayingg; // Toggle the playing state
+                          });
                         },
                         backgroundColor: Colors.white,
                         child: Icon(
-                          isPlaying ? Icons.pause : Icons.play_arrow,
+                          _isPlayingg ? Icons.pause : Icons.play_arrow,
                           color: Colors.black,
                           size: 36,
                         ),
@@ -265,30 +204,21 @@ class _SongPageState extends State<SongPage> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 32),
-
                 Slider(
-                  max: (totalDuration?.inSeconds.toDouble() ?? 0.0),
+                  value: _sliderValue.clamp(0.0, maxSliderValue),
                   onChanged: (value) {
+                    _player.seek(Duration(milliseconds: value.toInt()));
                     setState(() {
-                      sliderValue = value;
+                      _sliderValue = value;
                     });
                   },
-                  onChangeEnd: (value) async {
-                    final position = Duration(seconds: value.toInt());
-                    await _player.seek(position);
-                    if (isPlaying) {
-                      await _player.play();
-                    }
-                  },
-                  value: sliderValue,
+                  min: 0.0,
+                  max: maxSliderValue,
                   activeColor: Colors.white,
                   inactiveColor: Colors.grey[600],
                 ),
-
-                const SizedBox(height: 32),
-
+                const SizedBox(height: 26),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -314,7 +244,6 @@ class _SongPageState extends State<SongPage> {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 32),
               ],
             ),

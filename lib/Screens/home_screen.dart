@@ -301,10 +301,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   const SizedBox(height: 18),
                   SizedBox(
-                    height: 220,
+                    height: 200,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: charts.length,
+                      itemCount: playlists.length,
                       itemBuilder: (context, index) {
                         final chart = charts[index];
                         return GestureDetector(
@@ -322,12 +322,14 @@ class _MyHomePageState extends State<MyHomePage> {
                             width: 180,
                             child: Card(
                               color: Colors.black,
-                              // elevation: 5,
+                              elevation: 4,
                               child: Column(
                                 children: [
-                                  Image.network(
-                                    chart.image[0].link,
-                                    fit: BoxFit.cover,
+                                  Expanded(
+                                    child: Image.network(
+                                      chart.image[0].link,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                   Padding(
                                     padding: const EdgeInsets.all(8.0),
