@@ -56,7 +56,8 @@ class _SongPageState extends State<SongPage> {
   @override
   Widget build(BuildContext context) {
     double maxSliderValue = _player.duration?.inMilliseconds.toDouble() ?? 0.0;
-
+    _isPlayingg =
+        Provider.of<MiniPlayerProvider>(context, listen: false).isPlaying;
     return Scaffold(
       appBar: AppBar(
         title: const Text(

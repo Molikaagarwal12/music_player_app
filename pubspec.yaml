@@ -50,7 +50,9 @@ dependencies:
   get_it: ^7.6.0
   persistent_bottom_nav_bar: ^5.0.2
   cached_network_image: ^3.2.3
-  
+  cloud_firestore: ^4.7.1
+  firebase_storage: ^11.2.1
+  image_picker: ^0.8.9
 
 dev_dependencies:
   flutter_test:

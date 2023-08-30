@@ -16,7 +16,7 @@ class Routes {
       case login:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case signup:
-        return MaterialPageRoute(builder: (_) => const SignupScreen());
+        return MaterialPageRoute(builder: (_) => const SignUpScreen());
       case home:
         return MaterialPageRoute(builder: (_) => const MyHomePage());
       case search:

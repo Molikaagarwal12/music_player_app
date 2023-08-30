@@ -1,21 +1,32 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_player/Screens/home_screen.dart';
+import 'package:music_player/Screens/login_screen.dart';
 import 'package:music_player/Screens/search_screen.dart';
+import 'package:music_player/Screens/signup_screen.dart';
 import 'package:music_player/provider/mini_player_controller.dart';
+import 'package:music_player/provider/user_provider.dart';
 import 'package:music_player/widgets/mini_player.dart';
 import 'package:persistent_bottom_nav_bar/persistent_tab_view.dart';
 import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
+
 void main() async {
   await dotenv.load();
   GetIt.I.registerSingleton<AudioPlayer>(AudioPlayer());
-
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => MiniPlayerProvider(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => MiniPlayerProvider()),
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -28,11 +39,34 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      home: const MiniPlayerWrapper(),
       routes: {
         '/search': (context) => const SearchScreen(),
         '/home': (context) => const MyHomePage(),
+        '/login': (context) => const LoginScreen(),
+        '/signup': (context) => const SignUpScreen(),
       },
+      home: StreamBuilder<User?>(
+        stream: FirebaseAuth.instance.authStateChanges(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.active) {
+            if (snapshot.hasData) {
+              print("pehle se hai data");
+              return const MiniPlayerWrapper();
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text('${snapshot.error}'),
+              );
+            }
+          }
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          }
+
+          return const LoginScreen();
+        },
+      ),
     );
   }
 }
@@ -111,3 +145,4 @@ List<PersistentBottomNavBarItem> _navBarsItems() {
     ),
   ];
 }
+

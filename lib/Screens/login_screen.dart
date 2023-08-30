@@ -1,125 +1,129 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:music_player/provider/app_state.dart';
-import 'package:provider/provider.dart';
+import 'package:music_player/Screens/home_screen.dart';
+import 'package:music_player/Screens/signup_screen.dart';
+import 'package:music_player/main.dart';
+
+import '../resources/auth_repo.dart';
+import '../utils/image_picker.dart';
+import '../widgets/text_field_input.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
   @override
-  State createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  bool _isLoading = false;
 
-  bool _obscureText = true;
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
+  }
+
+  void loginUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    String res = await AuthRepo().LoginUser(
+      email: emailController.text,
+      password: passwordController.text,
+    );
+    if (res == 'success') {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MiniPlayerWrapper()),
+      );
+    } else {
+      showSnackBar(res, context);
+    }
+  }
+
+  void navigateToSignUp() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const SignUpScreen()),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context, listen: false);
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Login Screen',
-                  style: GoogleFonts.cinzel(
-                    textStyle: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w600,
+    return SafeArea(
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: Column(
+          children: [
+            Expanded(
+              child: ListView(
+                children: [
+                  const SizedBox(height: 250),
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: TextFieldInput(
+                      textEditingController: emailController,
+                      hintText: 'Enter your email',
+                      type: TextInputType.emailAddress,
                     ),
                   ),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                TextFormField(
-                  controller: _usernameController,
-                  style: GoogleFonts.cinzel(
-                    textStyle: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: TextFieldInput(
+                      textEditingController: passwordController,
+                      hintText: 'Password',
+                      isPass: true,
+                      type: TextInputType.emailAddress,
                     ),
                   ),
-                  decoration: const InputDecoration(
-                    labelText: 'Username',
-                    hintText: 'Enter your username',
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(Icons.person),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscureText,
-                  style: GoogleFonts.cinzel(
-                    textStyle: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.normal,
+                  Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: InkWell(
+                      onTap: loginUser,
+                      child: _isLoading
+                          ? const Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              ),
+                            )
+                          : Container(
+                              color: Colors.blue,
+                              height: 40,
+                              width: 370,
+                              child: const Center(
+                                child: Text(
+                                  'Log in',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ),
+                            ),
                     ),
                   ),
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    hintText: 'Enter your password',
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscureText
-                          ? Icons.visibility_off
-                          : Icons.visibility),
-                      onPressed: () {
-                        setState(() {
-                          _obscureText = !_obscureText;
-                        });
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    String email = _usernameController.text;
-                    String password = _passwordController.text;
-                    appState.login(email, password, context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    textStyle: GoogleFonts.cinzel(
-                      textStyle: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.normal,
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        "Don't have an account? ",
+                        style: TextStyle(color: Colors.white, fontSize: 20),
                       ),
-                    ),
-                  ),
-                  child: const Text('Login'),
-                ),
-                const SizedBox(height: 10),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/signup');
-                  },
-                  style: TextButton.styleFrom(
-                    textStyle: GoogleFonts.cinzel(
-                      textStyle: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                      GestureDetector(
+                        onTap: navigateToSignUp,
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.0),
+                          child: Text(
+                            "Sign up.",
+                            style: TextStyle(color: Colors.white, fontSize: 20),
+                          ),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  child: const Text('Don\'t have an account? Sign Up'),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

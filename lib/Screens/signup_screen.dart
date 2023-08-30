@@ -1,93 +1,215 @@
-import 'package:flutter/material.dart';
-import 'package:music_player/provider/app_state.dart';
-import 'package:provider/provider.dart';
+import 'dart:typed_data';
 
-class SignupScreen extends StatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:music_player/Screens/home_screen.dart';
+import 'package:music_player/Screens/login_screen.dart';
+import 'package:music_player/main.dart';
+
+import '../resources/auth_repo.dart';
+import '../utils/image_picker.dart';
+import '../widgets/text_field_input.dart';
+
+class SignUpScreen extends StatefulWidget {
+  const SignUpScreen({Key? key}) : super(key: key);
 
   @override
-  State createState() => _SignupScreenState();
+  State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignupScreenState extends State<SignupScreen> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+class _SignUpScreenState extends State<SignUpScreen> {
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  TextEditingController userController = TextEditingController();
+  Uint8List? _image;
+  bool _isLoading = false;
 
-  bool _obscureText = true;
+  @override
+  void dispose() {
+    emailController.dispose();
+    passwordController.dispose();
+    userController.dispose();
+    super.dispose();
+  }
+
+  Future<void> selectImage(BuildContext context) async {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Select Image'),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                ListTile(
+                  leading: const Icon(Icons.photo_library),
+                  title: const Text('Gallery'),
+                  onTap: () async {
+                    Uint8List? selectedImage =
+                        await pickImage(ImageSource.gallery);
+                    setState(() {
+                      _image = selectedImage;
+                    });
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.camera_alt),
+                  title: const Text('Camera'),
+                  onTap: () async {
+                    Uint8List? selectedImage =
+                        await pickImage(ImageSource.camera);
+                    setState(() {
+                      _image = selectedImage;
+                    });
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void signUpUser() async {
+    setState(() {
+      _isLoading = true;
+    });
+    String res = await AuthRepo().signUpUser(
+      email: emailController.text,
+      password: passwordController.text,
+      userName: userController.text,
+      file: _image!,
+    );
+
+    print({res});
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (context.mounted) {
+      if (res != 'success') {
+        showSnackBar(res, context);
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MiniPlayerWrapper()),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void navigateToLogin() {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (context) => const LoginScreen()));
+  }
 
   @override
   Widget build(BuildContext context) {
-    final appState = Provider.of<AppState>(context, listen: false);
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return SafeArea(
+      child: Scaffold(
+        body: ListView(
           children: [
-            const Text(
-              'SignUp Screen',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+            const SizedBox(height: 100),
+            Center(
+              child: Stack(
+                children: [
+                  _image != null
+                      ? CircleAvatar(
+                          radius: 64, backgroundImage: MemoryImage(_image!))
+                      : const CircleAvatar(
+                          radius: 64,
+                          backgroundImage: NetworkImage(
+                              'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png')),
+                  Positioned(
+                    top: 80,
+                    left: 80,
+                    child: IconButton(
+                      icon: const Icon(Icons.add_a_photo_sharp),
+                      onPressed: () => selectImage(context),
+                      iconSize: 45,
+                    ),
+                  )
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _usernameController,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                hintText: 'Enter your username',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.person),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextFieldInput(
+                textEditingController: userController,
+                hintText: 'Enter your Username',
+                type: TextInputType.emailAddress,
               ),
             ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'Email Address',
-                hintText: 'Enter your email address',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.email),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextFieldInput(
+                textEditingController: emailController,
+                hintText: 'Enter your email',
+                type: TextInputType.emailAddress,
               ),
             ),
-            const SizedBox(height: 20),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscureText,
-              decoration: InputDecoration(
-                labelText: 'Password',
-                hintText: 'Enter your password',
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                      _obscureText ? Icons.visibility_off : Icons.visibility),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText = !_obscureText;
-                    });
-                  },
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: TextFieldInput(
+                textEditingController: passwordController,
+                hintText: 'Password',
+                isPass: true,
+                type: TextInputType.emailAddress,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: InkWell(
+                onTap: signUpUser,
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: Colors.black,
+                        ),
+                      )
+                    : Container(
+                        color: Colors.blue,
+                        height: 40,
+                        width: 340,
+                        child: const Center(
+                          child: Text('Sign Up',
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                      ),
+              ),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: const Text(
+                    "Already have an account?",
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                String email = _usernameController.text;
-                String password = _passwordController.text;
-                appState.signup(email, password, context);
-              },
-              child: const Text('Sign Up'),
-            ),
-            const SizedBox(height: 10),
-            TextButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/login');
-              },
-              child: const Text('Already have an account? Login'),
-            ),
+                GestureDetector(
+                  onTap: navigateToLogin,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    child: const Text(
+                      "Login.",
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                    ),
+                  ),
+                )
+              ],
+            )
           ],
         ),
       ),

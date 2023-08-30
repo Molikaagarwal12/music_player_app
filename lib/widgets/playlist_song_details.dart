@@ -12,7 +12,7 @@ class PlaylistDetailPage extends StatefulWidget {
   final String playlistId;
   final String playlistTitle;
 
-  PlaylistDetailPage({
+  const PlaylistDetailPage({
     Key? key,
     required this.playlistId,
     required this.playlistTitle,

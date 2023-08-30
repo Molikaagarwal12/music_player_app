@@ -1,28 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
-
 import '../models/song.dart';
 
 class MiniPlayerProvider extends ChangeNotifier {
   final AudioPlayer _player = GetIt.I<AudioPlayer>();
-
   Song? _currentSong;
   bool _isPlaying = false;
   bool _isMiniPlayerVisible = false;
   bool _isLoading = false;
-  double _savedSliderValue = 0.0; // New variable to store slider value
+  double _savedSliderValue = 0.0;
 
   MiniPlayerProvider() {
     _player.playerStateStream.listen(_playerStateChanged);
   }
-
   bool get isPlaying => _isPlaying;
   bool get isMiniPlayerVisible => _isMiniPlayerVisible;
   Song? get currentSong => _currentSong;
   bool get isLoading => _isLoading;
-  double get savedSliderValue => _savedSliderValue; // Getter for slider value
-
+  double get savedSliderValue => _savedSliderValue;
   void setLoadingState(bool isLoading) {
     _isLoading = isLoading;
     notifyListeners();
@@ -33,11 +29,12 @@ class MiniPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
- void _playerStateChanged(PlayerState state) {
+  void _playerStateChanged(PlayerState state) {
     if (state.processingState == ProcessingState.completed ||
         state.processingState == ProcessingState.idle) {
       _isPlaying = false;
-      saveSliderValue(0.0); // Reset slider value when playback completes or stops
+      saveSliderValue(
+          0.0); // Reset slider value when playback completes or stops
       notifyListeners();
     } else if (state.playing) {
       _isPlaying = true;
@@ -55,10 +52,6 @@ class MiniPlayerProvider extends ChangeNotifier {
     }
     notifyListeners();
   }
- void togglePlayState() {
-  _isPlaying = !_isPlaying;
-  notifyListeners();
-}
 
   void showMiniPlayer() {
     _isMiniPlayerVisible = true;
@@ -90,6 +83,15 @@ class MiniPlayerProvider extends ChangeNotifier {
       }
     }
     saveSliderValue(_player.position.inSeconds.toDouble()); // Save slider value
+    notifyListeners();
+  }
+
+  void skipForward() {
+    // Implement skip forward logic
+  }
+
+  void skipBack() {
+    // Implement skip back logic
     notifyListeners();
   }
 

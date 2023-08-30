@@ -29,6 +29,13 @@
             {
               "client_id": "755076027233-nm039a6157m7jjpst4ebo2s6rtjs8j82.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "755076027233-8foce21n3stp7v11raum4qo20b2cfgr3.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.musicPlayer.RunnerTests"
+              }
             }
           ]
         }
