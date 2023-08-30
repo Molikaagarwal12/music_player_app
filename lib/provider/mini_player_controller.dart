@@ -49,6 +49,7 @@ class MiniPlayerProvider extends ChangeNotifier {
     _isMiniPlayerVisible = !_isMiniPlayerVisible;
     if (!_isMiniPlayerVisible) {
       _player.stop();
+      saveSliderValue(0.0);
     }
     notifyListeners();
   }
@@ -86,6 +87,14 @@ class MiniPlayerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+void signOut() {
+    if (_isPlaying) {
+      _player.stop();
+      _isPlaying = false;
+      _isMiniPlayerVisible = false;
+      notifyListeners();
+    }
+  }
   void skipForward() {
     // Implement skip forward logic
   }

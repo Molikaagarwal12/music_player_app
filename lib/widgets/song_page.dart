@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:get_it/get_it.dart';
 import 'package:json_annotation/json_annotation.dart';
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';

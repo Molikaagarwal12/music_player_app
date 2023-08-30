@@ -71,44 +71,71 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MiniPlayerWrapper extends StatelessWidget {
+class MiniPlayerWrapper extends StatefulWidget {
   const MiniPlayerWrapper({super.key});
 
   @override
+  State<MiniPlayerWrapper> createState() => _MiniPlayerWrapperState();
+}
+
+class _MiniPlayerWrapperState extends State<MiniPlayerWrapper> {
+  PersistentTabController? _tabController; 
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = PersistentTabController(
+        initialIndex: 0); 
+  }
+
+  @override
+  void dispose() {
+    _tabController?.dispose(); 
+    GetIt.I<AudioPlayer>().dispose();
+
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          PersistentTabView(
-            context,
-            controller: PersistentTabController(initialIndex: 0),
-            screens: _buildScreens(),
-            items: _navBarsItems(),
-            confineInSafeArea: true,
-            backgroundColor: Colors.black.withOpacity(0.0),
-          ),
-          Positioned(
-            bottom: 62,
-            left: 0,
-            right: 0,
-            child: Consumer<MiniPlayerProvider>(
-              builder: (context, miniPlayerProvider, _) {
-                if (miniPlayerProvider.isMiniPlayerVisible) {
-                  // Replace with your mini player widget
-                  return GlobalMiniPlayer(
-                    song: miniPlayerProvider.currentSong!,
-                    onClose: () {
-                      miniPlayerProvider.toggleMiniPlayerVisibility();
-                    },
-                  );
-                } else {
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
-          ),
-        ],
-      ),
+    return Consumer<UserProvider>(
+      builder: (context, userProvider, _) {
+        return userProvider.isAuthenticated
+            ? Scaffold(
+                body: Stack(
+                  children: [
+                    PersistentTabView(
+                      context,
+                      controller: _tabController, 
+                      screens: _buildScreens(),
+                      items: _navBarsItems(),
+                      confineInSafeArea: true,
+                      backgroundColor: Colors.black.withOpacity(0.0),
+                    ),
+                    Positioned(
+                      bottom: 62,
+                      left: 0,
+                      right: 0,
+                      child: Consumer<MiniPlayerProvider>(
+                        builder: (context, miniPlayerProvider, _) {
+                          if (miniPlayerProvider.isMiniPlayerVisible) {
+                            return GlobalMiniPlayer(
+                              song: miniPlayerProvider.currentSong!,
+                              onClose: () {
+                                miniPlayerProvider.toggleMiniPlayerVisibility();
+                              },
+                            );
+                          } else {
+                            return const SizedBox.shrink();
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            : const LoginScreen();
+      },
     );
   }
 }
@@ -145,4 +172,3 @@ List<PersistentBottomNavBarItem> _navBarsItems() {
     ),
   ];
 }
-

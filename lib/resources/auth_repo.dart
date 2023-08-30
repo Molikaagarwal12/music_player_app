@@ -1,10 +1,13 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-
+import 'package:flutter/material.dart';
 import 'package:music_player/models/user_model.dart' as model;
+import 'package:music_player/provider/mini_player_controller.dart';
+import 'package:music_player/provider/user_provider.dart';
 import 'package:music_player/resources/storage_method.dart';
+import 'package:provider/provider.dart';
+
 class AuthRepo {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -17,6 +20,7 @@ class AuthRepo {
   }
 
   Future<String> signUpUser({
+    required BuildContext context,
     required String email,
     required String password,
     required String userName,
@@ -31,8 +35,8 @@ class AuthRepo {
         UserCredential cred = await _auth.createUserWithEmailAndPassword(
             email: email, password: password);
 
-        String photoUrl = await StorageMethod()
-            .uploadProfileImage('profilePics', file);
+        String photoUrl =
+            await StorageMethod().uploadProfileImage('profilePics', file);
 
         if (kDebugMode) {
           print(cred.user!.uid);
@@ -44,10 +48,13 @@ class AuthRepo {
           email: email,
           photoUrl: photoUrl,
           favoritePlaylists: [],
-          favoriteSongs: []
+          favoriteSongs: [],
         );
 
         _firestore.collection('users').doc(cred.user!.uid).set(user.toJson());
+
+        Provider.of<UserProvider>(context, listen: false)
+            .setUserAuthenticated();
       }
       res = "success";
     } catch (err) {
@@ -57,6 +64,7 @@ class AuthRepo {
   }
 
   Future<String> LoginUser({
+    required BuildContext context,
     required String email,
     required String password,
   }) async {
@@ -66,6 +74,10 @@ class AuthRepo {
         await _auth.signInWithEmailAndPassword(
             email: email, password: password);
         res = "Success";
+
+        // Update authentication state
+        Provider.of<UserProvider>(context, listen: false)
+            .setUserAuthenticated();
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user_not_found') {
@@ -78,7 +90,12 @@ class AuthRepo {
     }
     return res;
   }
-   Future<void> signOut() async {
-    await _auth.signOut();
+
+  Future<void> signOut(BuildContext context) async {
+     _auth.signOut();
+
+    // Update authentication state
+    Provider.of<UserProvider>(context, listen: false).setUserUnauthenticated();
+    Provider.of<MiniPlayerProvider>(context, listen: false).signOut();
   }
 }

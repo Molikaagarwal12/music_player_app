@@ -15,19 +15,23 @@ class _SearchScreenState extends State<SearchScreen> {
     return Scaffold(
       body: Container(
         child: TextButton(
-          onPressed: () async{ 
-          await AuthRepo().signOut();
-          if(context.mounted){
-            Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const LoginScreen()));
-          }
-           },
-          child: const Text("SignOut",style: TextStyle(color: Colors.black,fontSize: 60),),
-
-        )
-        
-
+          onPressed: () async {
+            await AuthRepo().signOut(context);
+            if (context.mounted) {
+              print("hi");
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(builder: (context) => const LoginScreen()),
+              );
+            }
+          },
+          child: const Center(
+            child: Text(
+              "Sign Out",
+              style: TextStyle(color: Colors.black, fontSize: 60),
+            ),
+          ),
         ),
-    
+      ),
     );
   }
 }

@@ -1,11 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:music_player/Screens/home_screen.dart';
 import 'package:music_player/Screens/signup_screen.dart';
-import 'package:music_player/main.dart';
-
-import '../resources/auth_repo.dart';
-import '../utils/image_picker.dart';
-import '../widgets/text_field_input.dart';
+import '../utils/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -14,13 +9,33 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeInAnimation;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   bool _isLoading = false;
 
   @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _fadeInAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_animationController);
+
+    _animationController.forward();
+  }
+
+  @override
   void dispose() {
+    _animationController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -30,17 +45,10 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() {
       _isLoading = true;
     });
-    String res = await AuthRepo().LoginUser(
-      email: emailController.text,
-      password: passwordController.text,
-    );
-    if (res == 'success') {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MiniPlayerWrapper()),
-      );
-    } else {
-      showSnackBar(res, context);
-    }
+    await Future.delayed(const Duration(seconds: 2));
+    setState(() {
+      _isLoading = false;
+    });
   }
 
   void navigateToSignUp() {
@@ -53,77 +61,100 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Column(
-          children: [
-            Expanded(
-              child: ListView(
+        backgroundColor: const Color(0xff121212),
+        body: Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: 24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 160),
+              FadeTransition(
+                opacity: _fadeInAnimation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, -0.5),
+                    end: Offset.zero,
+                  ).animate(_animationController),
+                  child: const Text(
+                    "Welcome Back!",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 36, 
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 60), 
+              TextField(
+                controller: emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Email',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  border: OutlineInputBorder(
+                    borderRadius:
+                        BorderRadius.circular(12.0), 
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: passwordController,
+                style: const TextStyle(color: Colors.white),
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 40), 
+              FadeTransition(
+                opacity: _fadeInAnimation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.5),
+                    end: Offset.zero,
+                  ).animate(_animationController),
+                  child: MusicButton(
+                    onPressed: loginUser,
+                    text: _isLoading ? 'Logging in...' : 'Log in',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 250),
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: TextFieldInput(
-                      textEditingController: emailController,
-                      hintText: 'Enter your email',
-                      type: TextInputType.emailAddress,
-                    ),
+                  const Text(
+                    "Don't have an account? ",
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: TextFieldInput(
-                      textEditingController: passwordController,
-                      hintText: 'Password',
-                      isPass: true,
-                      type: TextInputType.emailAddress,
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: InkWell(
-                      onTap: loginUser,
-                      child: _isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                              ),
-                            )
-                          : Container(
-                              color: Colors.blue,
-                              height: 40,
-                              width: 370,
-                              child: const Center(
-                                child: Text(
-                                  'Log in',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ),
-                            ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        "Don't have an account? ",
-                        style: TextStyle(color: Colors.white, fontSize: 20),
+                  GestureDetector(
+                    onTap: navigateToSignUp,
+                    child: const Text(
+                      "Sign up.",
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      GestureDetector(
-                        onTap: navigateToSignUp,
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8.0),
-                          child: Text(
-                            "Sign up.",
-                            style: TextStyle(color: Colors.white, fontSize: 20),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

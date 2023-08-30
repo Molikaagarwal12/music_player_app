@@ -1,14 +1,12 @@
 import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:music_player/Screens/home_screen.dart';
 import 'package:music_player/Screens/login_screen.dart';
-import 'package:music_player/main.dart';
 
+import '../main.dart';
 import '../resources/auth_repo.dart';
+import '../utils/custom_button.dart';
 import '../utils/image_picker.dart';
-import '../widgets/text_field_input.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({Key? key}) : super(key: key);
@@ -17,15 +15,35 @@ class SignUpScreen extends StatefulWidget {
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends State<SignUpScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeInAnimation;
   TextEditingController emailController = TextEditingController();
   TextEditingController passwordController = TextEditingController();
   TextEditingController userController = TextEditingController();
-  Uint8List? _image;
   bool _isLoading = false;
+  Uint8List? _image;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _fadeInAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2.0,
+    ).animate(_animationController);
+
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
+    _animationController.dispose();
     emailController.dispose();
     passwordController.dispose();
     userController.dispose();
@@ -86,6 +104,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       password: passwordController.text,
       userName: userController.text,
       file: _image!,
+      context: context,
     );
 
     print({res});
@@ -109,17 +128,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
   }
 
   void navigateToLogin() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (context) => const LoginScreen()));
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: Colors.black, // Change background color
         body: ListView(
           children: [
-            const SizedBox(height: 100),
+            const SizedBox(height: 90),
             Center(
               child: Stack(
                 children: [
@@ -134,7 +155,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     top: 80,
                     left: 80,
                     child: IconButton(
-                      icon: const Icon(Icons.add_a_photo_sharp),
+                      icon: const Icon(
+                        Icons.add_a_photo_sharp,
+                        color: Colors.white,
+                      ),
                       onPressed: () => selectImage(context),
                       iconSize: 45,
                     ),
@@ -142,29 +166,59 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 ],
               ),
             ),
+            const SizedBox(
+              height: 30,
+            ),
             Padding(
               padding: const EdgeInsets.all(12.0),
-              child: TextFieldInput(
-                textEditingController: userController,
-                hintText: 'Enter your Username',
-                type: TextInputType.emailAddress,
+              child: TextField(
+                controller: userController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'UserName..',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(12.0),
-              child: TextFieldInput(
-                textEditingController: emailController,
-                hintText: 'Enter your email',
-                type: TextInputType.emailAddress,
+              child: TextField(
+                controller: emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: InputDecoration(
+                  hintText: 'Email Address..',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
             ),
             Padding(
               padding: const EdgeInsets.all(12.0),
-              child: TextFieldInput(
-                textEditingController: passwordController,
-                hintText: 'Password',
-                isPass: true,
-                type: TextInputType.emailAddress,
+              child: TextField(
+                controller: passwordController,
+                style: const TextStyle(color: Colors.white),
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Password',
+                  hintStyle: const TextStyle(color: Colors.white70),
+                  filled: true,
+                  fillColor: Colors.grey[800],
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
             ),
             Padding(
@@ -174,16 +228,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 child: _isLoading
                     ? const Center(
                         child: CircularProgressIndicator(
-                          color: Colors.black,
+                          color: Colors.white,
                         ),
                       )
-                    : Container(
-                        color: Colors.blue,
-                        height: 40,
-                        width: 340,
-                        child: const Center(
-                          child: Text('Sign Up',
-                              style: TextStyle(color: Colors.white)),
+                    : FadeTransition(
+                        opacity: _fadeInAnimation,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0, 0.5),
+                            end: Offset.zero,
+                          ).animate(_animationController),
+                          child: MusicButton(
+                            onPressed: signUpUser,
+                            text: _isLoading ? 'Signing in...' : 'Sign in',
+                          ),
                         ),
                       ),
               ),
@@ -203,8 +261,12 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: const Text(
-                      "Login.",
-                      style: TextStyle(color: Colors.white, fontSize: 20),
+                      "Log in.",
+                      style: TextStyle(
+                        color: Colors.green,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 )
