@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
+import '../models/playlist.dart';
 import '../models/song.dart';
 
 class MiniPlayerProvider extends ChangeNotifier {
@@ -9,7 +10,10 @@ class MiniPlayerProvider extends ChangeNotifier {
   bool _isPlaying = false;
   bool _isMiniPlayerVisible = false;
   bool _isLoading = false;
-  double _savedSliderValue = 0.0;
+  
+  int _index = 0;
+  int _playlistLength = 0;
+  Playlist? currentplaylist;
 
   MiniPlayerProvider() {
     _player.playerStateStream.listen(_playerStateChanged);
@@ -18,23 +22,28 @@ class MiniPlayerProvider extends ChangeNotifier {
   bool get isMiniPlayerVisible => _isMiniPlayerVisible;
   Song? get currentSong => _currentSong;
   bool get isLoading => _isLoading;
-  double get savedSliderValue => _savedSliderValue;
+  
+  void setInfo(int index, int playlistLength, Playlist playlist) {
+    _index = index;
+    _playlistLength = playlistLength;
+    currentplaylist = playlist;
+    notifyListeners();
+  }
+
+  int get index => _index;
+  int get playlistLength => _playlistLength;
+  Playlist? get currentPlaylist => currentplaylist;
+
   void setLoadingState(bool isLoading) {
     _isLoading = isLoading;
     notifyListeners();
   }
 
-  void saveSliderValue(double value) {
-    _savedSliderValue = value;
-    notifyListeners();
-  }
+  
 
   void _playerStateChanged(PlayerState state) {
-    if (state.processingState == ProcessingState.completed ||
-        state.processingState == ProcessingState.idle) {
+    if (state.processingState == ProcessingState.completed) {
       _isPlaying = false;
-      saveSliderValue(
-          0.0); // Reset slider value when playback completes or stops
       notifyListeners();
     } else if (state.playing) {
       _isPlaying = true;
@@ -49,7 +58,6 @@ class MiniPlayerProvider extends ChangeNotifier {
     _isMiniPlayerVisible = !_isMiniPlayerVisible;
     if (!_isMiniPlayerVisible) {
       _player.stop();
-      saveSliderValue(0.0);
     }
     notifyListeners();
   }
@@ -83,25 +91,17 @@ class MiniPlayerProvider extends ChangeNotifier {
         _isPlaying = false;
       }
     }
-    saveSliderValue(_player.position.inSeconds.toDouble()); // Save slider value
+    // Save slider value
     notifyListeners();
   }
 
-void signOut() {
+  void signOut() {
     if (_isPlaying) {
       _player.stop();
       _isPlaying = false;
       _isMiniPlayerVisible = false;
       notifyListeners();
     }
-  }
-  void skipForward() {
-    // Implement skip forward logic
-  }
-
-  void skipBack() {
-    // Implement skip back logic
-    notifyListeners();
   }
 
   @override

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:get_it/get_it.dart';
+import 'package:just_audio/just_audio.dart';
 import 'package:music_player/utils/extensions.dart';
 import 'package:provider/provider.dart';
 import '../models/song.dart';
@@ -20,6 +22,20 @@ class GlobalMiniPlayer extends StatefulWidget {
 }
 
 class GlobalMiniPlayerState extends State<GlobalMiniPlayer> {
+  bool replay = false;
+  final AudioPlayer _player = GetIt.I<AudioPlayer>();
+
+  
+
+  void handleReplay() {
+      setState(() {
+        replay =true;
+      });
+      _player.seek(Duration.zero);
+     _player.play();
+    }
+  
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -40,7 +56,6 @@ class GlobalMiniPlayerState extends State<GlobalMiniPlayer> {
           ),
           const SizedBox(width: 16),
           Expanded(
-            // Use Expanded to ensure the column takes available space
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -88,9 +103,7 @@ class GlobalMiniPlayerState extends State<GlobalMiniPlayer> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => SongPage(
-                        song: widget.song,
-                      ),
+                      builder: (context) => const SongPage(),
                     ),
                   );
                 },
@@ -107,6 +120,21 @@ class GlobalMiniPlayerState extends State<GlobalMiniPlayer> {
                 icon: const Icon(
                   Icons.close,
                   color: Colors.white,
+                ),
+              ),
+              IconButton(
+                onPressed: () {
+                  handleReplay();
+                  setState(() {
+                    replay = false;
+                  }); // Call the replay function
+                },
+                icon: Icon(
+                  Icons.replay,
+                  color: replay
+                      ? Colors.green
+                      : Colors
+                          .grey, // Change the icon color based on replay availability
                 ),
               ),
             ],

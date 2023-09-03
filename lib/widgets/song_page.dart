@@ -1,10 +1,10 @@
 import 'dart:async';
 
 import 'package:get_it/get_it.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music_player/models/models.dart';
 import 'package:music_player/provider/mini_player_controller.dart';
 import 'package:music_player/utils/extensions.dart';
 import 'package:provider/provider.dart';
@@ -12,25 +12,21 @@ import 'package:provider/provider.dart';
 import '../models/song.dart';
 
 class SongPage extends StatefulWidget {
-  final Song song;
-
-  const SongPage({
-    Key? key,
-    required this.song,
-  }) : super(key: key);
+  const SongPage({Key? key}) : super(key: key);
 
   @override
   State<SongPage> createState() => _SongPageState();
 }
 
-@JsonSerializable()
 class _SongPageState extends State<SongPage> {
   bool isLiked = false;
-  final AudioPlayer _player = GetIt.I<AudioPlayer>();
+  final AudioPlayer _player = GetIt.I<AudioPlayer>()..setShuffleModeEnabled(false);
   double _sliderValue = 0.0;
   StreamSubscription<Duration>? _positionSubscription;
   bool _isPlayingg = false;
-
+  bool replay = false;
+  bool _isLoop = false;
+  bool random = false;
   @override
   void initState() {
     super.initState();
@@ -44,6 +40,73 @@ class _SongPageState extends State<SongPage> {
     });
     _isPlayingg =
         Provider.of<MiniPlayerProvider>(context, listen: false).isPlaying;
+
+    _player.playerStateStream.listen((PlayerState state) {
+      if (state.processingState == ProcessingState.completed) {
+        setState(() {
+          replay = true;
+        });
+        if (_player.loopMode == LoopMode.one) {
+          _player.seek(Duration.zero);
+        }
+      }
+    });
+  }
+
+  void toggleLoopMode() {
+    final currentLoopMode = _player.loopMode;
+
+    if (currentLoopMode == LoopMode.off) {
+      _player.setLoopMode(LoopMode.one);
+      setState(() {
+        _isLoop = true;
+      });
+    } else {
+      _player.setLoopMode(LoopMode.off);
+      setState(() {
+        _isLoop = false;
+      });
+    }
+  }
+
+  void toggleShuffleMode() {
+    _player.setShuffleModeEnabled(!_player.shuffleModeEnabled);
+  }
+
+  void skipForward() {
+    final miniPlayerProvider =
+        Provider.of<MiniPlayerProvider>(context, listen: false);
+    final currentIndex = miniPlayerProvider.index;
+    final playlistLength = miniPlayerProvider.playlistLength;
+
+    if (playlistLength > 0) {
+      int nextIndex = (currentIndex + 1) % playlistLength;
+      final nextSong = miniPlayerProvider.currentPlaylist?.songs[nextIndex];
+
+      if (nextSong != null) {
+        miniPlayerProvider.play(nextSong);
+        miniPlayerProvider.setInfo(
+            nextIndex, playlistLength, miniPlayerProvider.currentPlaylist!);
+      }
+    }
+  }
+
+  void backward() {
+    final miniPlayerProvider =
+        Provider.of<MiniPlayerProvider>(context, listen: false);
+    final currentIndex = miniPlayerProvider.index;
+    final playlistLength = miniPlayerProvider.playlistLength;
+
+    if (playlistLength > 0) {
+      int nextIndex = (currentIndex - 1 + playlistLength) % playlistLength;
+      final nextSong = miniPlayerProvider.currentPlaylist?.songs[nextIndex];
+
+      if (nextSong != null) {
+        miniPlayerProvider.play(nextSong);
+        miniPlayerProvider.setInfo(
+            nextIndex, playlistLength, miniPlayerProvider.currentPlaylist!);
+      }
+    }
   }
 
   @override
@@ -54,6 +117,8 @@ class _SongPageState extends State<SongPage> {
 
   @override
   Widget build(BuildContext context) {
+    Song? song =
+        Provider.of<MiniPlayerProvider>(context, listen: false).currentSong;
     double maxSliderValue = _player.duration?.inMilliseconds.toDouble() ?? 0.0;
     _isPlayingg =
         Provider.of<MiniPlayerProvider>(context, listen: false).isPlaying;
@@ -98,7 +163,7 @@ class _SongPageState extends State<SongPage> {
       body: Container(
         decoration: BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage(widget.song.image[2].link),
+            image: NetworkImage(song!.image[2].link),
             fit: BoxFit.cover,
           ),
         ),
@@ -120,7 +185,7 @@ class _SongPageState extends State<SongPage> {
               children: [
                 const SizedBox(height: 260),
                 Text(
-                  widget.song.name.unescapeHtml(),
+                  song.name.unescapeHtml(),
                   style: const TextStyle(
                     fontSize: 36,
                     fontWeight: FontWeight.bold,
@@ -130,28 +195,28 @@ class _SongPageState extends State<SongPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Album: ${widget.song.album.name.unescapeHtml()}',
+                  'Album: ${song.album.name.unescapeHtml()}',
                   style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
                   ),
                 ),
                 Text(
-                  'Artist: ${widget.song.primaryArtists.unescapeHtml()}',
+                  'Artist: ${song.primaryArtists.unescapeHtml()}',
                   style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
                   ),
                 ),
                 Text(
-                  'Year: ${widget.song.year}',
+                  'Year: ${song.year}',
                   style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
                   ),
                 ),
                 Text(
-                  'Language: ${widget.song.language}',
+                  'Language: ${song.language}',
                   style: const TextStyle(
                     fontSize: 18,
                     color: Colors.white,
@@ -163,7 +228,9 @@ class _SongPageState extends State<SongPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          backward();
+                        },
                         iconSize: 36,
                         icon: const Icon(
                           Icons.skip_previous,
@@ -173,14 +240,16 @@ class _SongPageState extends State<SongPage> {
                       const SizedBox(width: 32),
                       FloatingActionButton(
                         onPressed: () async {
-                          if (_isPlayingg) {
+                          if (replay) {
+                            _player.seek(Duration.zero);
+                          } else if (_isPlayingg) {
                             _player.pause();
                           } else {
                             _player.play();
                           }
                           setState(() {
-                            _isPlayingg =
-                                !_isPlayingg; // Toggle the playing state
+                            _isPlayingg = !_isPlayingg;
+                            replay = false;
                           });
                         },
                         backgroundColor: Colors.white,
@@ -193,7 +262,7 @@ class _SongPageState extends State<SongPage> {
                       const SizedBox(width: 32),
                       IconButton(
                         onPressed: () {
-                          // Implement the logic for next song
+                          skipForward();
                         },
                         iconSize: 36,
                         icon: const Icon(
@@ -224,21 +293,23 @@ class _SongPageState extends State<SongPage> {
                   children: [
                     IconButton(
                       onPressed: () {
-                        // Add logic for repeat action
+                        toggleLoopMode();
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.repeat,
-                        color: Colors.white,
                         size: 28,
+                        color: _isLoop ? Colors.green : Colors.white,
                       ),
                     ),
                     IconButton(
                       onPressed: () {
-                        // Add logic for shuffle action
+                        toggleShuffleMode();
                       },
-                      icon: const Icon(
+                      icon: Icon(
                         Icons.shuffle,
-                        color: Colors.white,
+                        color: _player.shuffleModeEnabled
+                            ? Colors.green
+                            : Colors.white,
                         size: 28,
                       ),
                     ),

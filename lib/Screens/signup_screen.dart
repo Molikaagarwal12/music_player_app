@@ -142,28 +142,37 @@ class _SignUpScreenState extends State<SignUpScreen>
           children: [
             const SizedBox(height: 90),
             Center(
-              child: Stack(
-                children: [
-                  _image != null
-                      ? CircleAvatar(
-                          radius: 64, backgroundImage: MemoryImage(_image!))
-                      : const CircleAvatar(
-                          radius: 64,
-                          backgroundImage: NetworkImage(
-                              'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png')),
-                  Positioned(
-                    top: 80,
-                    left: 80,
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.add_a_photo_sharp,
-                        color: Colors.white,
-                      ),
-                      onPressed: () => selectImage(context),
-                      iconSize: 45,
-                    ),
-                  )
-                ],
+              child: FadeTransition(
+                opacity: _fadeInAnimation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.5),
+                    end: Offset.zero,
+                  ).animate(_animationController),
+                  child: Stack(
+                    children: [
+                      _image != null
+                          ? CircleAvatar(
+                              radius: 64, backgroundImage: MemoryImage(_image!))
+                          : const CircleAvatar(
+                              radius: 64,
+                              backgroundImage: NetworkImage(
+                                  'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png')),
+                      Positioned(
+                        top: 80,
+                        left: 80,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.add_a_photo_sharp,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => selectImage(context),
+                          iconSize: 45,
+                        ),
+                      )
+                    ],
+                  ),
+                ),
               ),
             ),
             const SizedBox(
@@ -220,6 +229,9 @@ class _SignUpScreenState extends State<SignUpScreen>
                   ),
                 ),
               ),
+            ),
+            const SizedBox(
+              height: 20,
             ),
             Padding(
               padding: const EdgeInsets.all(12.0),

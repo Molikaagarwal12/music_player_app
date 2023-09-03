@@ -26,7 +26,7 @@ class PlaylistDetailPage extends StatefulWidget {
 class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
   void _showMiniPlayer(Song song) {
     Provider.of<MiniPlayerProvider>(context, listen: false)
-        .play(song); // Play the song using the provider
+        .play(song); 
   }
 
   @override
@@ -218,6 +218,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                   itemBuilder: (context, index) {
                     final song = playlist.songs[index];
                     final artistName = song.primaryArtists;
+                    
                     return Card(
                       color: Colors.black,
                       elevation: 2.0,
@@ -261,10 +262,13 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                         ),
                         onTap: () {
                           Provider.of<MiniPlayerProvider>(context,
+                                  listen: false).setInfo(index, playlist.songs.length,playlist);
+                          Provider.of<MiniPlayerProvider>(context,
                                   listen: false)
                               .showMiniPlayer(); // Show the mini player
                           GetIt.I<AudioPlayer>().stop();
                           _showMiniPlayer(song);
+                          
                         },
                       ),
                     );
@@ -279,17 +283,3 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
   }
 }
 
- // bottomNavigationBar: Consumer<MiniPlayerProvider>(
-      //   builder: (context, miniPlayerProvider, child) {
-      //     if (miniPlayerProvider.isMiniPlayerVisible) {
-      //       return GlobalMiniPlayer(
-      //         song: miniPlayerProvider.currentSong!,
-      //         onClose: () {
-      //           miniPlayerProvider.toggleMiniPlayerVisibility();
-      //         },
-      //       );
-      //     } else {
-      //       return const SizedBox.shrink();
-      //     }
-      //   },
-      // ),
