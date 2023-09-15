@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:music_player/Screens/login_screen.dart';
+import 'package:music_player/widgets/mini_player_wrapper.dart';
 
 import '../main.dart';
 import '../resources/auth_repo.dart';
@@ -116,6 +117,7 @@ class _SignUpScreenState extends State<SignUpScreen>
     if (context.mounted) {
       if (res != 'success') {
         showSnackBar(res, context);
+        return;
       } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const MiniPlayerWrapper()),

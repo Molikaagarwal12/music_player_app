@@ -4,7 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import '../models/playlist.dart';
 import '../models/song.dart';
 
-class MiniPlayerProvider extends ChangeNotifier {
+class MiniPlayerProvider<T> extends ChangeNotifier {
   final AudioPlayer _player = GetIt.I<AudioPlayer>();
   Song? _currentSong;
   bool _isPlaying = false;
@@ -13,7 +13,8 @@ class MiniPlayerProvider extends ChangeNotifier {
   
   int _index = 0;
   int _playlistLength = 0;
-  Playlist? currentplaylist;
+  T? currentplaylist;
+  bool _isShuffleMode = false;
 
   MiniPlayerProvider() {
     _player.playerStateStream.listen(_playerStateChanged);
@@ -23,7 +24,7 @@ class MiniPlayerProvider extends ChangeNotifier {
   Song? get currentSong => _currentSong;
   bool get isLoading => _isLoading;
   
-  void setInfo(int index, int playlistLength, Playlist playlist) {
+  void setInfo(int index, int playlistLength, T playlist) {
     _index = index;
     _playlistLength = playlistLength;
     currentplaylist = playlist;
@@ -32,7 +33,8 @@ class MiniPlayerProvider extends ChangeNotifier {
 
   int get index => _index;
   int get playlistLength => _playlistLength;
-  Playlist? get currentPlaylist => currentplaylist;
+  T? get currentPlaylist => currentplaylist;
+  bool get isShuffleMode => _isShuffleMode;
 
   void setLoadingState(bool isLoading) {
     _isLoading = isLoading;
@@ -52,6 +54,10 @@ class MiniPlayerProvider extends ChangeNotifier {
       _isPlaying = false;
       notifyListeners();
     }
+  }
+void toggleShuffleMode() {
+    _isShuffleMode = !_isShuffleMode;
+    notifyListeners();
   }
 
   void toggleMiniPlayerVisibility() {
@@ -91,10 +97,10 @@ class MiniPlayerProvider extends ChangeNotifier {
         _isPlaying = false;
       }
     }
-    // Save slider value
+   
     notifyListeners();
   }
-
+  
   void signOut() {
     if (_isPlaying) {
       _player.stop();

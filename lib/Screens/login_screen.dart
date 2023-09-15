@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:music_player/Screens/signup_screen.dart';
+import 'package:music_player/main.dart';
+import 'package:music_player/resources/auth_repo.dart';
+import 'package:music_player/utils/image_picker.dart';
+import 'package:music_player/widgets/mini_player_wrapper.dart';
 import '../utils/custom_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -45,10 +49,24 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() {
       _isLoading = true;
     });
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() {
-      _isLoading = false;
-    });
+    String res = await AuthRepo().LoginUser(
+      email: emailController.text,
+      password: passwordController.text, context: context,
+    );
+     if (context.mounted) {
+      if (res == 'success') {
+        showSnackBar(res, context);
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const MiniPlayerWrapper()),
+        );
+      }
+      setState(() {
+        _isLoading = false;
+      });
+    } else {
+      showSnackBar(res, context);
+    }
   }
 
   void navigateToSignUp() {

@@ -112,6 +112,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                   await api.getSongDetails(trending_.id);
 
                               if (context.mounted) {
+                                Provider.of<MiniPlayerProvider>(context,
+                                        listen: false)
+                                    .setInfo(index, 1, trending_);
                                 miniPlayerProvider.setLoadingState(false);
                                 Provider.of<MiniPlayerProvider>(context,
                                         listen: false)
@@ -191,10 +194,13 @@ class _MyHomePageState extends State<MyHomePage> {
                               final song = await api.getSongDetails(album.id);
 
                               if (context.mounted) {
+                                Provider.of<MiniPlayerProvider>(context,
+                                        listen: false)
+                                    .setInfo(index, 1, song);
                                 miniPlayerProvider.setLoadingState(false);
                                 Provider.of<MiniPlayerProvider>(context,
                                         listen: false)
-                                    .showMiniPlayer(); // Show the mini player
+                                    .showMiniPlayer();
                                 GetIt.I<AudioPlayer>().stop();
                                 _showMiniPlayer(song[0]);
                               }

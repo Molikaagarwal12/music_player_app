@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_player/api/jio_saavn.dart';
 import 'package:music_player/utils/extensions.dart';
-import 'package:provider/provider.dart'; // Import Provider
+import 'package:provider/provider.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import '../models/album.dart';
 
 import '../models/song.dart';
@@ -25,8 +27,7 @@ class AlbumSongsPage extends StatefulWidget {
 
 class _AlbumSongsPageState extends State<AlbumSongsPage> {
   void _showMiniPlayer(Song song) {
-    Provider.of<MiniPlayerProvider>(context, listen: false)
-        .play(song); // Play the song using the provider
+    Provider.of<MiniPlayerProvider>(context, listen: false).play(song);
   }
 
   @override
@@ -35,6 +36,7 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
+        elevation: 0,
       ),
       body: FutureBuilder(
         future: api.getAlbumDetails(widget.albumId),
@@ -50,72 +52,65 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
           if (label.length > 14) {
             label = '${label.substring(0, 14)}...';
           }
+
           return SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 250),
-                    height: 250,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: NetworkImage(
-                          album.image[2].link,
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 250),
+                      height: 250,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          fit: BoxFit.cover,
+                          image: NetworkImage(
+                            album.image[2].link,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 250),
+                      height: 250,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Container(
+                      SizedBox(
                         width: 60,
                         height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 1.5,
-                          ),
-                        ),
                         child: IconButton(
                           onPressed: () {
                             // Add your logic here for the first icon's onTap function
                           },
-                          icon: const Icon(
-                            Icons.favorite_border,
+                          icon: const FaIcon(
+                            FontAwesomeIcons.heart,
                             size: 30,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Container(
+                      const SizedBox(width: 5),
+                      SizedBox(
                         width: 60,
                         height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 1,
-                          ),
-                        ),
                         child: IconButton(
                           onPressed: () {
                             // Add your logic here for the second icon's onTap function
                           },
-                          icon: const Icon(
-                            Icons.play_arrow,
+                          icon: const FaIcon(
+                            FontAwesomeIcons.play,
+                            size: 30,
                             color: Colors.white,
-                            size: 36,
                           ),
                         ),
                       ),
@@ -123,33 +118,44 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
                   ),
                 ),
                 const SizedBox(
-                  height: 10,
+                  height: 5,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 14),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      album.name.unescapeHtml(),
+                    child: DefaultTextStyle(
                       style: const TextStyle(
-                        fontSize: 25,
+                        fontSize: 28,
                         color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText(
+                            album.name.unescapeHtml(),
+                            speed: const Duration(milliseconds: 300),
+                          ),
+                        ],
+                        totalRepeatCount: 80000,
+                        pause: const Duration(milliseconds: 200),
                       ),
                     ),
                   ),
                 ),
                 const SizedBox(height: 10),
                 Padding(
-                  padding: const EdgeInsets.only(left: 14),
+                  padding: const EdgeInsets.only(left: 16),
                   child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        "${album.primaryArtists}".unescapeHtml(),
-                        style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.white,
-                            fontWeight: FontWeight.w400),
-                      )),
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "${album.primaryArtists}".unescapeHtml(),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 15),
                 Padding(
@@ -203,6 +209,9 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
                     ],
                   ),
                 ),
+                const SizedBox(
+                  height: 10,
+                ),
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
@@ -210,6 +219,7 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
                   itemBuilder: (context, index) {
                     final song = album.songs[index];
                     final artistName = song.primaryArtists;
+
                     return Card(
                       color: Colors.black,
                       elevation: 2.0,
@@ -219,7 +229,7 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
                         leading: ClipRRect(
                           borderRadius: BorderRadius.circular(4.0),
                           child: Image.network(
-                            song.image[2].link,
+                            song.image[1].link,
                             fit: BoxFit.cover,
                             width: 60,
                             height: 60,
@@ -229,7 +239,7 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
                           song.name.unescapeHtml(),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 16.0,
+                            fontSize: 18,
                             color: Colors.white,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -238,7 +248,7 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
                           artistName.unescapeHtml(),
                           style: const TextStyle(
                             fontSize: 14.0,
-                            color: Colors.white,
+                            color: Colors.grey,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -254,7 +264,10 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
                         onTap: () {
                           Provider.of<MiniPlayerProvider>(context,
                                   listen: false)
-                              .showMiniPlayer(); // Show the mini player
+                              .setInfo(index, album.songs.length, album);
+                          Provider.of<MiniPlayerProvider>(context,
+                                  listen: false)
+                              .showMiniPlayer();
                           GetIt.I<AudioPlayer>().stop();
                           _showMiniPlayer(song);
                         },
@@ -270,18 +283,3 @@ class _AlbumSongsPageState extends State<AlbumSongsPage> {
     );
   }
 }
-
- // bottomNavigationBar: Consumer<MiniPlayerProvider>(
-      //   builder: (context, miniPlayerProvider, child) {
-      //     if (miniPlayerProvider.isMiniPlayerVisible) {
-      //       return GlobalMiniPlayer(
-      //         song: miniPlayerProvider.currentSong!,
-      //         onClose: () {
-      //           miniPlayerProvider.toggleMiniPlayerVisibility();
-      //         },
-      //       );
-      //     } else {
-      //       return const SizedBox.shrink();
-      //     }
-      //   },
-      // ),

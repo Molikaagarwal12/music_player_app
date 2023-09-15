@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
+
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_player/api/jio_saavn.dart';
+
 import 'package:music_player/utils/extensions.dart';
-import 'package:provider/provider.dart'; // Import Provider
+
+import 'package:provider/provider.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import '../models/playlist.dart';
 import '../models/song.dart';
 import '../provider/mini_player_controller.dart';
@@ -20,13 +27,13 @@ class PlaylistDetailPage extends StatefulWidget {
 
   @override
   State<PlaylistDetailPage> createState() => _PlaylistDetailPageState();
-  
 }
 
 class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
+  double? _progress;
   void _showMiniPlayer(Song song) {
-    Provider.of<MiniPlayerProvider>(context, listen: false)
-        .play(song); 
+    Provider.of<MiniPlayerProvider>(context, listen: false).play(song);
+    print(song.id);
   }
 
   @override
@@ -35,6 +42,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
+        elevation: 0,
       ),
       body: FutureBuilder(
         future: api.getPlaylistDetails(widget.playlistId),
@@ -52,68 +60,59 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // const SizedBox(height: 20),
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 250),
-                    height: 250,
-                    decoration: BoxDecoration(
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image: NetworkImage(
-                          playlist.image[2].link,
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 250),
+                      height: 250,
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          fit: BoxFit.cover,
+                          image: NetworkImage(
+                            playlist.image[2].link,
+                          ),
                         ),
                       ),
                     ),
-                  ),
+                    Container(
+                      constraints: const BoxConstraints(maxWidth: 250),
+                      height: 250,
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 Padding(
                   padding: const EdgeInsets.only(right: 10),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
-                      Container(
+                      SizedBox(
                         width: 60,
                         height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
-                        ),
                         child: IconButton(
                           onPressed: () {
                             // Add your logic here for the first icon's onTap function
                           },
-                          icon: const Icon(
-                            Icons.favorite_border,
+                          icon: const FaIcon(
+                            FontAwesomeIcons.heart,
                             size: 30,
                             color: Colors.white,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Container(
+                      const SizedBox(width: 5),
+                      SizedBox(
                         width: 60,
                         height: 60,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 2,
-                          ),
-                        ),
                         child: IconButton(
                           onPressed: () {
                             // Add your logic here for the second icon's onTap function
                           },
-                          icon: const Icon(
-                            Icons.play_arrow,
-                            color: Colors.green,
-                            size: 36,
+                          icon: const FaIcon(
+                            FontAwesomeIcons.play,
+                            size: 30,
+                            color: Colors.white,
                           ),
                         ),
                       ),
@@ -121,17 +120,27 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                   ),
                 ),
                 const SizedBox(
-                  height: 10,
+                  height: 5,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(left: 14),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      playlist.name,
+                    child: DefaultTextStyle(
                       style: const TextStyle(
-                        fontSize: 25,
+                        fontSize: 28,
                         color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText(
+                            playlist.name,
+                            speed: const Duration(milliseconds: 300),
+                          ),
+                        ],
+                        totalRepeatCount: 80000,
+                        pause: const Duration(milliseconds: 200),
                       ),
                     ),
                   ),
@@ -211,6 +220,9 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                     ],
                   ),
                 ),
+                const SizedBox(
+                  height: 10,
+                ),
                 ListView.builder(
                   physics: const NeverScrollableScrollPhysics(),
                   shrinkWrap: true,
@@ -218,7 +230,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                   itemBuilder: (context, index) {
                     final song = playlist.songs[index];
                     final artistName = song.primaryArtists;
-                    
+
                     return Card(
                       color: Colors.black,
                       elevation: 2.0,
@@ -238,7 +250,7 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                           song.name.unescapeHtml(),
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
-                            fontSize: 16.0,
+                            fontSize: 18,
                             color: Colors.white,
                           ),
                           overflow: TextOverflow.ellipsis,
@@ -247,28 +259,78 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
                           artistName.unescapeHtml(),
                           style: const TextStyle(
                             fontSize: 14.0,
-                            color: Colors.white,
+                            color: Colors.grey,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(
-                            Icons.download,
-                            color: Colors.white,
+                        trailing: SizedBox(
+                          width: 60,
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: IconButton(
+                                  icon: const FaIcon(
+                                    FontAwesomeIcons.download,
+                                    size: 30,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    FileDownloader.downloadFile(
+                                        url: song.downloadUrl[0].link,
+                                        name: song.name,
+                                        onProgress: (fileName, progress) {
+                                          setState(() {
+                                            _progress = progress;
+                                          });
+                                        },
+                                        onDownloadCompleted: (value) {
+                                          print('path $value');
+                                          setState(() {
+                                            _progress = null;
+                                          });
+                                        });
+                                  },
+                                ),
+                              ),
+                              Expanded(
+                                child: PopupMenuButton<String>(
+                                  icon: const Icon(
+                                    Icons.more_vert,
+                                    color: Colors.white,
+                                  ),
+                                  onSelected: (String value) {
+                                    if (value == 'Show Lyrics') {
+                                    } else if (value == 'Add to Queue') {
+                                    } else if (value == 'Add to Favorite') {}
+                                  },
+                                  itemBuilder: (BuildContext context) => [
+                                    const PopupMenuItem<String>(
+                                      value: 'Show Lyrics',
+                                      child: Text('Add to Lyrics'),
+                                    ),
+                                    const PopupMenuItem<String>(
+                                      value: 'Add to Queue',
+                                      child: Text('Add to Queue'),
+                                    ),
+                                    const PopupMenuItem<String>(
+                                      value: 'Add to Favorite',
+                                      child: Text('Add to Favorite'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                          onPressed: () {
-                            // Logic for the download icon's onTap function
-                          },
                         ),
                         onTap: () {
                           Provider.of<MiniPlayerProvider>(context,
-                                  listen: false).setInfo(index, playlist.songs.length,playlist);
+                                  listen: false)
+                              .setInfo(index, playlist.songs.length, playlist);
                           Provider.of<MiniPlayerProvider>(context,
                                   listen: false)
-                              .showMiniPlayer(); // Show the mini player
+                              .showMiniPlayer();
                           GetIt.I<AudioPlayer>().stop();
                           _showMiniPlayer(song);
-                          
                         },
                       ),
                     );
@@ -282,4 +344,3 @@ class _PlaylistDetailPageState extends State<PlaylistDetailPage> {
     );
   }
 }
-

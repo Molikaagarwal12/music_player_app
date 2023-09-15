@@ -1,11 +1,14 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_player/models/models.dart';
 import 'package:music_player/provider/mini_player_controller.dart';
+import 'package:music_player/resources/firestore_methods.dart';
 import 'package:music_player/utils/extensions.dart';
 import 'package:provider/provider.dart';
 
@@ -19,14 +22,17 @@ class SongPage extends StatefulWidget {
 }
 
 class _SongPageState extends State<SongPage> {
+  final FirebaseFavoriteMethods _firebaseMethods = FirebaseFavoriteMethods();
+
   bool isLiked = false;
-  final AudioPlayer _player = GetIt.I<AudioPlayer>()..setShuffleModeEnabled(false);
+  final AudioPlayer _player = GetIt.I<AudioPlayer>();
   double _sliderValue = 0.0;
   StreamSubscription<Duration>? _positionSubscription;
   bool _isPlayingg = false;
   bool replay = false;
   bool _isLoop = false;
-  bool random = false;
+  var userData = {};
+
   @override
   void initState() {
     super.initState();
@@ -69,18 +75,35 @@ class _SongPageState extends State<SongPage> {
     }
   }
 
-  void toggleShuffleMode() {
-    _player.setShuffleModeEnabled(!_player.shuffleModeEnabled);
-  }
-
-  void skipForward() {
+  void skip(bool isBackward, bool isForward) {
     final miniPlayerProvider =
         Provider.of<MiniPlayerProvider>(context, listen: false);
     final currentIndex = miniPlayerProvider.index;
     final playlistLength = miniPlayerProvider.playlistLength;
 
-    if (playlistLength > 0) {
-      int nextIndex = (currentIndex + 1) % playlistLength;
+    if (playlistLength > 1) {
+      int nextIndex;
+
+      if (miniPlayerProvider.isShuffleMode) {
+        final playlist = miniPlayerProvider.currentPlaylist;
+        if (playlist != null) {
+          final random = Random();
+          nextIndex = random.nextInt(playlist.songs.length);
+        } else {
+          if (isForward) {
+            nextIndex = (currentIndex + 1) % playlistLength;
+          } else {
+            nextIndex = (currentIndex - 1 + playlistLength) % playlistLength;
+          }
+        }
+      } else {
+        if (isForward) {
+          nextIndex = (currentIndex + 1) % playlistLength;
+        } else {
+          nextIndex = (currentIndex - 1 + playlistLength) % playlistLength;
+        }
+      }
+
       final nextSong = miniPlayerProvider.currentPlaylist?.songs[nextIndex];
 
       if (nextSong != null) {
@@ -88,26 +111,25 @@ class _SongPageState extends State<SongPage> {
         miniPlayerProvider.setInfo(
             nextIndex, playlistLength, miniPlayerProvider.currentPlaylist!);
       }
+    } else {
+      _player.seek(Duration.zero);
     }
   }
+//   void toggleFavoriteStatus() async {
+//   final miniPlayerProvider =
+//       Provider.of<MiniPlayerProvider>(context, listen: false);
+//   final Song? currentSong = miniPlayerProvider.currentSong;
 
-  void backward() {
-    final miniPlayerProvider =
-        Provider.of<MiniPlayerProvider>(context, listen: false);
-    final currentIndex = miniPlayerProvider.index;
-    final playlistLength = miniPlayerProvider.playlistLength;
+//   if (currentSong == null) {
+//     return;
+//   }
+//   final String uid = FirebaseAuth.instance.currentUser!.uid;
+//     await _firebaseMethods.addSongToFavorites(uid, currentSong);
+//   setState(() {
+//     isLiked = !isLiked;
+//   });
+// }
 
-    if (playlistLength > 0) {
-      int nextIndex = (currentIndex - 1 + playlistLength) % playlistLength;
-      final nextSong = miniPlayerProvider.currentPlaylist?.songs[nextIndex];
-
-      if (nextSong != null) {
-        miniPlayerProvider.play(nextSong);
-        miniPlayerProvider.setInfo(
-            nextIndex, playlistLength, miniPlayerProvider.currentPlaylist!);
-      }
-    }
-  }
 
   @override
   void dispose() {
@@ -138,9 +160,7 @@ class _SongPageState extends State<SongPage> {
         actions: [
           IconButton(
             onPressed: () {
-              setState(() {
-                isLiked = !isLiked;
-              });
+            // toggleFavoriteStatus();
             },
             icon: Icon(
               isLiked ? Icons.favorite : Icons.favorite_border,
@@ -160,30 +180,35 @@ class _SongPageState extends State<SongPage> {
         ],
       ),
       extendBodyBehindAppBar: true,
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: NetworkImage(song!.image[2].link),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Colors.transparent,
-                Colors.black.withOpacity(0.7),
-              ],
+      body: Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(song!.image[2].link),
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-          child: Padding(
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.7),
+                ],
+              ),
+            ),
+          ),
+          Padding(
             padding: const EdgeInsets.only(left: 18),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 260),
+
                 Text(
                   song.name.unescapeHtml(),
                   style: const TextStyle(
@@ -229,7 +254,7 @@ class _SongPageState extends State<SongPage> {
                     children: [
                       IconButton(
                         onPressed: () {
-                          backward();
+                          skip(true, false);
                         },
                         iconSize: 36,
                         icon: const Icon(
@@ -262,7 +287,7 @@ class _SongPageState extends State<SongPage> {
                       const SizedBox(width: 32),
                       IconButton(
                         onPressed: () {
-                          skipForward();
+                          skip(false, true);
                         },
                         iconSize: 36,
                         icon: const Icon(
@@ -274,6 +299,7 @@ class _SongPageState extends State<SongPage> {
                   ),
                 ),
                 const SizedBox(height: 32),
+                // Slider
                 Slider(
                   value: _sliderValue.clamp(0.0, maxSliderValue),
                   onChanged: (value) {
@@ -288,6 +314,7 @@ class _SongPageState extends State<SongPage> {
                   inactiveColor: Colors.grey[600],
                 ),
                 const SizedBox(height: 26),
+
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
@@ -303,11 +330,14 @@ class _SongPageState extends State<SongPage> {
                     ),
                     IconButton(
                       onPressed: () {
-                        toggleShuffleMode();
+                        Provider.of<MiniPlayerProvider>(context, listen: false)
+                            .toggleShuffleMode();
                       },
                       icon: Icon(
                         Icons.shuffle,
-                        color: _player.shuffleModeEnabled
+                        color: Provider.of<MiniPlayerProvider>(context,
+                                    listen: false)
+                                .isShuffleMode
                             ? Colors.green
                             : Colors.white,
                         size: 28,
@@ -319,68 +349,7 @@ class _SongPageState extends State<SongPage> {
               ],
             ),
           ),
-        ),
-      ),
-      drawer: Drawer(
-        child: Container(
-          color: Colors.blue[800], // Background color of the drawer
-          child: ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              DrawerHeader(
-                decoration: BoxDecoration(
-                  color: Colors.blue[600], // Header background color
-                ),
-                child: const Text(
-                  'Song Options',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                  ),
-                ),
-              ),
-              ListTile(
-                title: const Text(
-                  'Like Song',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-                onTap: () {
-                  // Implement the logic for liking the song
-                },
-              ),
-              ListTile(
-                title: const Text(
-                  'Dislike Song',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-                onTap: () {
-                  // Implement the logic for disliking the song
-                },
-              ),
-              ListTile(
-                title: const Text(
-                  'Show Lyrics',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                  ),
-                ),
-                onTap: () {
-                  // Implement the logic for showing the lyrics of the song
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Rest of the options...
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

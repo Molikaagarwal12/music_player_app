@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:music_player/models/user_model.dart' as model;
 import 'package:music_player/provider/mini_player_controller.dart';
-import 'package:music_player/provider/user_provider.dart';
+
 import 'package:music_player/resources/storage_method.dart';
 import 'package:provider/provider.dart';
 
@@ -52,9 +52,6 @@ class AuthRepo {
         );
 
         _firestore.collection('users').doc(cred.user!.uid).set(user.toJson());
-
-        Provider.of<UserProvider>(context, listen: false)
-            .setUserAuthenticated();
       }
       res = "success";
     } catch (err) {
@@ -76,8 +73,6 @@ class AuthRepo {
         res = "Success";
 
         // Update authentication state
-        Provider.of<UserProvider>(context, listen: false)
-            .setUserAuthenticated();
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user_not_found') {
@@ -93,9 +88,6 @@ class AuthRepo {
 
   Future<void> signOut(BuildContext context) async {
      _auth.signOut();
-
-    // Update authentication state
-    Provider.of<UserProvider>(context, listen: false).setUserUnauthenticated();
     Provider.of<MiniPlayerProvider>(context, listen: false).signOut();
   }
 }
